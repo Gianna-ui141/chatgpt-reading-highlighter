@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "ChatGPT 阅读荧光笔"
+  },
+  "extensionDescription": {
+    "message": "在 ChatGPT 长回答中高亮、添加旁注、回看并导出重点内容。"
+  },
+  "actionTitle": {
+    "message": "打开阅读标注"
+  }
+}
