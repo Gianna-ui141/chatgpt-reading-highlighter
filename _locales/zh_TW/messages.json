@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "ChatGPT 閱讀螢光筆"
+  },
+  "extensionDescription": {
+    "message": "在 ChatGPT 長回答中醒目標示、加入旁註、回看並匯出重點內容。"
+  },
+  "actionTitle": {
+    "message": "開啟閱讀標註"
+  }
+}
