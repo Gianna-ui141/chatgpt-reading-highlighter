@@ -4,6 +4,26 @@ A local-first Chrome/Edge extension for a two-pass reading workflow in ChatGPT: 
 
 Current version: **0.2.0**
 
+## Preview
+
+### 1. Highlight as you skim
+
+Select a passage to open the color and note toolbar without covering ChatGPT's native selection menu.
+
+![Selection toolbar](assets/screenshots/selection-toolbar.png)
+
+### 2. Return to what matters
+
+Use different colors to preserve your first-pass reading decisions across a long response.
+
+![Highlighted response](assets/screenshots/highlighted-response.png)
+
+### 3. Review highlights and notes in one place
+
+Search annotations, jump back to the original passage, edit notes, or export the collection as Markdown or JSON.
+
+![Annotation panel](assets/screenshots/annotation-panel.png)
+
 ## Features
 
 - Four highlight colors
