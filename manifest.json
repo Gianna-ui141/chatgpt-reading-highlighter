@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT Reading Highlighter",
+  "version": "0.1.0",
+  "description": "Highlight, annotate, revisit, and export passages from ChatGPT conversations.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://chatgpt.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["src/anchor.js", "src/content.js"],
+      "css": ["src/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Open Reading Highlighter"
+  },
+  "background": {
+    "service_worker": "src/background.js"
+  }
+}

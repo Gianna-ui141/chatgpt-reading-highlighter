@@ -1,0 +1,53 @@
+::highlight(cgrh-yellow) { background: rgba(253, 230, 138, .78); color: inherit; }
+::highlight(cgrh-green) { background: rgba(187, 247, 208, .78); color: inherit; }
+::highlight(cgrh-blue) { background: rgba(191, 219, 254, .78); color: inherit; }
+::highlight(cgrh-pink) { background: rgba(251, 207, 232, .78); color: inherit; }
+
+#cgrh-root, #cgrh-toolbar { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+#cgrh-toggle {
+  position: fixed; right: 18px; bottom: 76px; z-index: 2147483645; width: 42px; height: 42px;
+  border: 1px solid rgba(127,127,127,.22); border-radius: 50%; background: #171717; color: white;
+  box-shadow: 0 8px 28px rgba(0,0,0,.18); cursor: pointer; font-size: 18px;
+}
+#cgrh-panel {
+  position: fixed; z-index: 2147483646; top: 0; right: 0; width: min(380px, 92vw); height: 100vh;
+  display: flex; flex-direction: column; color: #202020; background: #fbfaf7;
+  border-left: 1px solid #dedbd2; box-shadow: -12px 0 36px rgba(0,0,0,.12);
+  transform: translateX(105%); transition: transform .2s ease;
+}
+#cgrh-panel.is-open { transform: translateX(0); }
+#cgrh-panel header { display:flex; align-items:center; justify-content:space-between; padding:18px 18px 12px; border-bottom:1px solid #e8e4db; }
+#cgrh-panel header div { display:flex; align-items:baseline; gap:9px; }
+#cgrh-panel header strong { font-size:17px; }
+#cgrh-panel header small { color:#777; }
+#cgrh-panel button { font:inherit; }
+#cgrh-close { border:0; background:transparent; cursor:pointer; font-size:26px; color:#666; }
+.cgrh-search { padding:12px 14px; }
+.cgrh-search input { width:100%; padding:9px 11px; border:1px solid #d8d4ca; border-radius:9px; background:white; color:#222; outline:none; }
+#cgrh-list { flex:1; overflow:auto; padding:0 14px 16px; }
+.cgrh-empty { margin-top:34px; color:#777; text-align:center; line-height:1.7; padding:20px; }
+.cgrh-item { position:relative; margin:10px 0; padding:12px 12px 10px 15px; border:1px solid #e2ded4; border-radius:10px; background:white; box-shadow:0 2px 8px rgba(0,0,0,.035); }
+.cgrh-item::before { content:""; position:absolute; left:0; top:9px; bottom:9px; width:4px; border-radius:4px; background:var(--item-color); }
+.cgrh-jump { display:block; width:100%; padding:0; border:0; background:transparent; color:#292929; cursor:pointer; text-align:left; line-height:1.55; }
+.cgrh-item p { margin:9px 0 3px; padding:8px 9px; border-radius:7px; background:#f5f3ee; color:#555; font-size:13px; line-height:1.5; }
+.cgrh-item > div { display:flex; align-items:center; gap:9px; margin-top:8px; }
+.cgrh-item time { margin-right:auto; color:#999; font-size:11px; }
+.cgrh-item > div button { padding:2px 0; border:0; background:transparent; color:#777; cursor:pointer; font-size:12px; }
+.cgrh-item > div button:hover { color:#111; }
+#cgrh-panel footer { display:flex; gap:8px; padding:12px 14px 16px; border-top:1px solid #e8e4db; }
+#cgrh-panel footer button { flex:1; padding:8px; border:1px solid #d4d0c6; border-radius:8px; background:white; color:#333; cursor:pointer; }
+#cgrh-toolbar {
+  position:fixed; z-index:2147483647; display:none; align-items:center; gap:6px; padding:7px;
+  border:1px solid rgba(127,127,127,.25); border-radius:10px; background:#202020; box-shadow:0 8px 28px rgba(0,0,0,.24);
+}
+#cgrh-toolbar.is-visible { display:flex; }
+#cgrh-toolbar button[data-color] { width:25px; height:25px; padding:0; border:2px solid #202020; outline:1px solid rgba(255,255,255,.35); border-radius:50%; background:var(--swatch); cursor:pointer; }
+#cgrh-toolbar button[data-note] { padding:4px 8px; border:0; border-radius:6px; background:#343434; color:#fff; cursor:pointer; font-size:12px; }
+.cgrh-pulse { animation:cgrh-pulse 1.25s ease; }
+@keyframes cgrh-pulse { 0%,100% { outline:0 solid rgba(251,191,36,0); } 35% { outline:5px solid rgba(251,191,36,.28); border-radius:8px; } }
+@media (prefers-color-scheme: dark) {
+  #cgrh-panel { color:#eee; background:#20201f; border-left-color:#3b3b39; }
+  #cgrh-panel header, #cgrh-panel footer { border-color:#3b3b39; }
+  .cgrh-search input, .cgrh-item, #cgrh-panel footer button { color:#eee; background:#292928; border-color:#444440; }
+  .cgrh-jump { color:#eee; } .cgrh-item p { background:#343432; color:#ccc; }
+}
