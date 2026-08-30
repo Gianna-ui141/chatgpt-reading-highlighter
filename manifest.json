@@ -1,20 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "ChatGPT Reading Highlighter",
-  "version": "0.1.1",
-  "description": "Highlight, annotate, revisit, and export passages from ChatGPT conversations.",
+  "name": "__MSG_extensionName__",
+  "version": "0.2.0",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "permissions": ["storage", "activeTab"],
   "host_permissions": ["https://chatgpt.com/*"],
   "content_scripts": [
     {
       "matches": ["https://chatgpt.com/*"],
-      "js": ["src/anchor.js", "src/content.js"],
+      "js": ["src/anchor.js", "src/i18n.js", "src/content.js"],
       "css": ["src/content.css"],
       "run_at": "document_idle"
     }
   ],
   "action": {
-    "default_title": "Open Reading Highlighter"
+    "default_title": "__MSG_actionTitle__"
   },
   "background": {
     "service_worker": "src/background.js"
