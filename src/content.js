@@ -154,10 +154,28 @@
   function showToolbar(range) {
     const toolbar = document.getElementById("cgrh-toolbar");
     if (!toolbar) return;
-    const rect = range.getBoundingClientRect();
-    toolbar.style.left = `${Math.max(12, Math.min(innerWidth - 260, rect.left + rect.width / 2 - 105))}px`;
-    toolbar.style.top = `${Math.max(12, rect.top - 48)}px`;
     toolbar.classList.add("is-visible");
+    const rects = Array.from(range.getClientRects()).filter((rect) => rect.width || rect.height);
+    const lastRect = rects.at(-1) || range.getBoundingClientRect();
+    const toolbarRect = toolbar.getBoundingClientRect();
+    const margin = 10;
+    const left = Math.max(
+      12,
+      Math.min(innerWidth - toolbarRect.width - 12, lastRect.left + lastRect.width / 2 - toolbarRect.width / 2)
+    );
+    const belowTop = lastRect.bottom + margin;
+
+    // ChatGPT's native selection menu normally occupies the space above the
+    // selection. Prefer the lower edge so both menus remain usable. Near the
+    // viewport bottom, dock our toolbar at the lower-right instead of moving
+    // it into the native menu's position.
+    if (belowTop + toolbarRect.height <= innerHeight - 12) {
+      toolbar.style.left = `${left}px`;
+      toolbar.style.top = `${belowTop}px`;
+    } else {
+      toolbar.style.left = `${Math.max(12, innerWidth - toolbarRect.width - 24)}px`;
+      toolbar.style.top = `${Math.max(12, innerHeight - toolbarRect.height - 24)}px`;
+    }
   }
 
   function hideToolbar() {
