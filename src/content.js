@@ -4,10 +4,10 @@
   const STORAGE_KEY = "cgrh_annotations_v1";
   const SETTINGS_KEY = "cgrh_settings_v1";
   const COLORS = {
-    yellow: { label: "黄色", hex: "#fde68a" },
-    green: { label: "绿色", hex: "#bbf7d0" },
-    blue: { label: "蓝色", hex: "#bfdbfe" },
-    pink: { label: "粉色", hex: "#fbcfe8" }
+    yellow: { labelKey: "colorYellow", hex: "#fde68a" },
+    green: { labelKey: "colorGreen", hex: "#bbf7d0" },
+    blue: { labelKey: "colorBlue", hex: "#bfdbfe" },
+    pink: { labelKey: "colorPink", hex: "#fbcfe8" }
   };
   const state = {
     annotations: [],
@@ -19,6 +19,10 @@
   };
 
   const anchor = globalThis.ChatGPTReadingAnchor;
+  const i18n = globalThis.ChatGPTReadingI18n;
+  const language = i18n.resolveLanguage(navigator.language);
+  const locale = language === "zh" ? "zh-CN" : "en-US";
+  const t = (key, variables) => i18n.translate(language, key, variables);
 
   function conversationId() {
     const match = location.pathname.match(/\/c\/([^/?#]+)/);
@@ -115,12 +119,12 @@
     const root = document.createElement("div");
     root.id = "cgrh-root";
     root.innerHTML = `
-      <button id="cgrh-toggle" type="button" title="阅读标注">✦</button>
-      <aside id="cgrh-panel" aria-label="阅读标注侧边栏">
-        <header><div><strong>阅读标注</strong><small id="cgrh-count"></small></div><button id="cgrh-close" type="button">×</button></header>
-        <div class="cgrh-search"><input id="cgrh-search" type="search" placeholder="搜索标记或旁注…"></div>
+      <button id="cgrh-toggle" type="button" title="${t("toggleTitle")}">✦</button>
+      <aside id="cgrh-panel" aria-label="${t("panelAriaLabel")}">
+        <header><div><strong>${t("panelTitle")}</strong><small id="cgrh-count"></small></div><button id="cgrh-close" type="button">×</button></header>
+        <div class="cgrh-search"><input id="cgrh-search" type="search" placeholder="${t("searchPlaceholder")}"></div>
         <div id="cgrh-list"></div>
-        <footer><button id="cgrh-export-md" type="button">导出 Markdown</button><button id="cgrh-export-json" type="button">导出 JSON</button></footer>
+        <footer><button id="cgrh-export-md" type="button">${t("exportMarkdown")}</button><button id="cgrh-export-json" type="button">${t("exportJson")}</button></footer>
       </aside>`;
     document.documentElement.appendChild(root);
 
@@ -128,8 +132,8 @@
     toolbar.id = "cgrh-toolbar";
     toolbar.setAttribute("role", "toolbar");
     toolbar.innerHTML = Object.entries(COLORS).map(([key, color]) =>
-      `<button type="button" data-color="${key}" title="${color.label}" style="--swatch:${color.hex}"></button>`
-    ).join("") + `<button type="button" data-note title="高亮并添加旁注">＋旁注</button>`;
+      `<button type="button" data-color="${key}" title="${t(color.labelKey)}" style="--swatch:${color.hex}"></button>`
+    ).join("") + `<button type="button" data-note title="${t("addNoteTitle")}">${t("addNote")}</button>`;
     document.documentElement.appendChild(toolbar);
 
     root.querySelector("#cgrh-toggle").addEventListener("click", togglePanel);
@@ -200,7 +204,7 @@
     const color = button.dataset.color || "yellow";
     let note = "";
     if (button.hasAttribute("data-note")) {
-      note = prompt("给这段内容添加旁注：", "")?.trim() || "";
+      note = prompt(t("createNotePrompt"), "")?.trim() || "";
     }
     await addAnnotation(color, note);
   }
@@ -273,17 +277,17 @@
     const filtered = local.filter((item) =>
       !state.query || `${item.quote} ${item.note}`.toLowerCase().includes(state.query)
     );
-    panel.querySelector("#cgrh-count").textContent = `${local.length} 条`;
+    panel.querySelector("#cgrh-count").textContent = t("itemCount", { count: local.length });
     const list = panel.querySelector("#cgrh-list");
     if (!filtered.length) {
-      list.innerHTML = `<div class="cgrh-empty">选中回答中的文字，即可开始标记。</div>`;
+      list.innerHTML = `<div class="cgrh-empty">${t("emptyState")}</div>`;
       return;
     }
     list.innerHTML = filtered.map((item) => `
       <article class="cgrh-item" data-id="${item.id}" style="--item-color:${COLORS[item.color]?.hex || COLORS.yellow.hex}">
         <button class="cgrh-jump" type="button">“${escapeHtml(item.quote.slice(0, 180))}${item.quote.length > 180 ? "…" : ""}”</button>
         ${item.note ? `<p>${escapeHtml(item.note)}</p>` : ""}
-        <div><time>${new Date(item.createdAt).toLocaleString()}</time><button class="cgrh-edit" type="button">旁注</button><button class="cgrh-delete" type="button">删除</button></div>
+        <div><time>${new Date(item.createdAt).toLocaleString(locale)}</time><button class="cgrh-edit" type="button">${t("note")}</button><button class="cgrh-delete" type="button">${t("delete")}</button></div>
       </article>`).join("");
     list.querySelectorAll(".cgrh-jump").forEach((button) => button.addEventListener("click", () => jumpTo(button.closest("article").dataset.id)));
     list.querySelectorAll(".cgrh-edit").forEach((button) => button.addEventListener("click", () => editNote(button.closest("article").dataset.id)));
@@ -308,7 +312,7 @@
   async function editNote(id) {
     const item = state.annotations.find((annotation) => annotation.id === id);
     if (!item) return;
-    const next = prompt("编辑旁注：", item.note || "");
+    const next = prompt(t("editNotePrompt"), item.note || "");
     if (next === null) return;
     item.note = next.trim();
     await persist();
@@ -331,8 +335,8 @@
       content = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), annotations: items }, null, 2);
       type = "application/json";
     } else {
-      content = `# ${document.title}\n\n来源：${location.href}\n\n` + items.map((item) =>
-        `> ${item.quote.replace(/\n/g, "\n> ")}\n\n${item.note ? `旁注：${item.note}\n\n` : ""}颜色：${COLORS[item.color]?.label || item.color} · ${new Date(item.createdAt).toLocaleString()}\n`
+      content = `# ${document.title}\n\n${t("source")}: ${location.href}\n\n` + items.map((item) =>
+        `> ${item.quote.replace(/\n/g, "\n> ")}\n\n${item.note ? `${t("noteLabel")}: ${item.note}\n\n` : ""}${t("color")}: ${COLORS[item.color] ? t(COLORS[item.color].labelKey) : item.color} · ${new Date(item.createdAt).toLocaleString(locale)}\n`
       ).join("\n---\n\n");
       type = "text/markdown";
     }
