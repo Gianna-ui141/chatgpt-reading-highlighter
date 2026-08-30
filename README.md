@@ -2,6 +2,8 @@
 
 A local-first Chrome/Edge extension for a two-pass reading workflow in ChatGPT: skim once and leave highlights, then return to the passages that mattered.
 
+Current version: **0.1.1**
+
 ## Features
 
 - Four highlight colors
@@ -11,6 +13,7 @@ A local-first Chrome/Edge extension for a two-pass reading workflow in ChatGPT: 
 - Persistent restoration after reloads and dynamic page rendering
 - Markdown and JSON export
 - Local-only storage; no account, analytics, or external server
+- Selection toolbar placement that avoids ChatGPT's native selection menu
 
 ## Install locally
 
