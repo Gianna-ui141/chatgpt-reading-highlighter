@@ -1,11 +1,11 @@
 {
   "name": "chatgpt-reading-highlighter",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "A local-first reading highlighter for ChatGPT conversations.",
   "scripts": {
     "test": "node --test",
-    "check": "node --check src/anchor.js && node --check src/content.js && node --check src/background.js && node --test"
+    "check": "node --check src/anchor.js && node --check src/i18n.js && node --check src/content.js && node --check src/background.js && node --test"
   },
   "license": "MIT"
 }
