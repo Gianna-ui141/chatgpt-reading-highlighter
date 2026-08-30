@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "ChatGPT Reading Highlighter"
+  },
+  "extensionDescription": {
+    "message": "Highlight, annotate, revisit, and export passages from ChatGPT conversations."
+  },
+  "actionTitle": {
+    "message": "Open Reading Highlighter"
+  }
+}
