@@ -2,7 +2,7 @@
 
 A local-first Chrome/Edge extension for a two-pass reading workflow in ChatGPT: skim once and leave highlights, then return to the passages that mattered.
 
-Current version: **0.1.1**
+Current version: **0.2.0**
 
 ## Features
 
@@ -14,6 +14,16 @@ Current version: **0.1.1**
 - Markdown and JSON export
 - Local-only storage; no account, analytics, or external server
 - Selection toolbar placement that avoids ChatGPT's native selection menu
+- Automatic Chinese/English interface switching based on the browser language
+
+## Language support
+
+The extension automatically follows the browser language:
+
+- Chinese browser locales (`zh-CN`, `zh-HK`, `zh-TW`, and related variants) display the Chinese interface.
+- All other browser locales display the English interface by default.
+
+This applies to the extension name and description, toolbar labels, annotation panel, prompts, timestamps, and Markdown exports. Existing highlights remain available when the display language changes.
 
 ## Install locally
 
@@ -24,7 +34,7 @@ Current version: **0.1.1**
 5. Select this repository folder.
 6. Reload `https://chatgpt.com`.
 
-Select text inside an assistant response. Choose a color or **＋旁注** from the floating toolbar. Use the ✦ button at the lower right to open the annotation panel.
+Select text inside an assistant response. Choose a color or **+ Note / ＋旁注** from the floating toolbar. Use the ✦ button at the lower right to open the annotation panel.
 
 ## Privacy
 
