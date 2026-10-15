@@ -1,6 +1,6 @@
 {
   "name": "chatgpt-reading-highlighter",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "A local-first reading highlighter for ChatGPT conversations.",
   "scripts": {

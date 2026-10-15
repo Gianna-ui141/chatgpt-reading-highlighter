@@ -9,6 +9,26 @@
     blue: { labelKey: "colorBlue", hex: "#bfdbfe" },
     pink: { labelKey: "colorPink", hex: "#fbcfe8" }
   };
+  const ASSISTANT_ROOT_SELECTOR = [
+    '[data-message-author-role="assistant"]',
+    '[data-author-role="assistant"]',
+    '[data-turn="assistant"]'
+  ].join(",");
+  const USER_ROOT_SELECTOR = [
+    '[data-message-author-role="user"]',
+    '[data-author-role="user"]',
+    '[data-turn="user"]'
+  ].join(",");
+  const TURN_SELECTOR = [
+    'article[data-testid^="conversation-turn-"]',
+    '[data-testid^="conversation-turn-"]',
+    '[data-turn]'
+  ].join(",");
+  const MESSAGE_CONTENT_SELECTOR = [
+    '.markdown',
+    '.prose',
+    '[class*="markdown"]'
+  ].join(",");
   const state = {
     annotations: [],
     currentRange: null,
@@ -30,17 +50,34 @@
   }
 
   function assistantMessages() {
-    const direct = Array.from(document.querySelectorAll('[data-message-author-role="assistant"]'));
-    if (direct.length) return direct;
-    return Array.from(document.querySelectorAll('article[data-testid^="conversation-turn-"]'))
-      .filter((element) => !element.querySelector('[data-message-author-role="user"]'));
+    const candidates = [
+      ...document.querySelectorAll(ASSISTANT_ROOT_SELECTOR),
+      ...document.querySelectorAll(TURN_SELECTOR),
+      ...document.querySelectorAll(MESSAGE_CONTENT_SELECTOR)
+    ];
+    return Array.from(new Set(candidates.map(messageRoot).filter(Boolean)));
+  }
+
+  function isUserMessage(element) {
+    return element.matches(USER_ROOT_SELECTOR) || Boolean(element.querySelector(USER_ROOT_SELECTOR));
   }
 
   function messageRoot(node) {
     if (!(node instanceof Node)) return null;
     const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-    return element?.closest('[data-message-author-role="assistant"]') ||
-      element?.closest('article[data-testid^="conversation-turn-"]') || null;
+    if (!element || element.closest("#cgrh-root, #cgrh-toolbar")) return null;
+
+    const explicit = element.closest(ASSISTANT_ROOT_SELECTOR);
+    if (explicit) return explicit;
+
+    const turn = element.closest(TURN_SELECTOR);
+    if (turn && !isUserMessage(turn) && turn.querySelector(MESSAGE_CONTENT_SELECTOR)) return turn;
+
+    const content = element.closest(MESSAGE_CONTENT_SELECTOR);
+    if (!content || content.closest("form, [contenteditable='true']")) return null;
+    const contentTurn = content.closest(TURN_SELECTOR);
+    if (contentTurn && isUserMessage(contentTurn)) return null;
+    return contentTurn || content;
   }
 
   function messageIdentity(message) {
@@ -361,11 +398,15 @@
     await load();
     createUi();
     renderHighlights();
-    document.addEventListener("mouseup", () => setTimeout(onSelection, 0));
+    // Capture selection events before ChatGPT's native selection menu can stop
+    // propagation. The fallback selectors above keep this working across UI
+    // variants that no longer expose the original assistant-role attribute.
+    document.addEventListener("mouseup", () => setTimeout(onSelection, 0), true);
     document.addEventListener("keyup", (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.key === "Escape") hideToolbar();
       else setTimeout(onSelection, 0);
-    });
+    }, true);
     new MutationObserver(queueRender).observe(document.body, { childList: true, subtree: true });
     chrome.runtime.onMessage.addListener((message) => {
       if (message?.type === "CGRH_TOGGLE_PANEL") togglePanel();
