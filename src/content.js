@@ -29,6 +29,20 @@
     '.prose',
     '[class*="markdown"]'
   ].join(",");
+  const READABLE_BLOCK_SELECTOR = [
+    "p", "li", "blockquote", "pre", "h1", "h2", "h3", "h4", "h5", "h6"
+  ].join(",");
+  const BLOCKED_SELECTION_SELECTOR = [
+    "#cgrh-root",
+    "#cgrh-toolbar",
+    "form",
+    "textarea",
+    "input",
+    '[role="textbox"]',
+    '[contenteditable="true"]',
+    "nav",
+    "aside"
+  ].join(",");
   const state = {
     annotations: [],
     currentRange: null,
@@ -53,7 +67,9 @@
     const candidates = [
       ...document.querySelectorAll(ASSISTANT_ROOT_SELECTOR),
       ...document.querySelectorAll(TURN_SELECTOR),
-      ...document.querySelectorAll(MESSAGE_CONTENT_SELECTOR)
+      ...document.querySelectorAll(MESSAGE_CONTENT_SELECTOR),
+      ...document.querySelectorAll('main article, main [data-message-id], main [data-turn-id]'),
+      ...document.querySelectorAll(`main ${READABLE_BLOCK_SELECTOR}`)
     ];
     return Array.from(new Set(candidates.map(messageRoot).filter(Boolean)));
   }
@@ -65,19 +81,50 @@
   function messageRoot(node) {
     if (!(node instanceof Node)) return null;
     const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-    if (!element || element.closest("#cgrh-root, #cgrh-toolbar")) return null;
+    if (!element || element.closest(BLOCKED_SELECTION_SELECTOR)) return null;
+
+    // A user turn must never be mistaken for an answer just because it also
+    // contains prose-like elements.
+    if (element.closest(USER_ROOT_SELECTOR)) return null;
 
     const explicit = element.closest(ASSISTANT_ROOT_SELECTOR);
     if (explicit) return explicit;
 
     const turn = element.closest(TURN_SELECTOR);
-    if (turn && !isUserMessage(turn) && turn.querySelector(MESSAGE_CONTENT_SELECTOR)) return turn;
+    if (turn && !isUserMessage(turn)) return turn;
 
     const content = element.closest(MESSAGE_CONTENT_SELECTOR);
-    if (!content || content.closest("form, [contenteditable='true']")) return null;
-    const contentTurn = content.closest(TURN_SELECTOR);
-    if (contentTurn && isUserMessage(contentTurn)) return null;
-    return contentTurn || content;
+    if (content) return content;
+
+    // ChatGPT occasionally removes or renames the message classes used above.
+    // Semantic HTML is a more durable final fallback for normal answer text.
+    const article = element.closest("article, [data-message-id], [data-turn-id]");
+    if (article && !isUserMessage(article)) return article;
+
+    const block = element.closest(READABLE_BLOCK_SELECTOR);
+    if (block && block.closest("main")) return block;
+    return null;
+  }
+
+  function commonReadableRoot(range) {
+    const commonNode = range.commonAncestorContainer;
+    const common = commonNode.nodeType === Node.ELEMENT_NODE ? commonNode : commonNode.parentElement;
+    if (!common || common.closest(BLOCKED_SELECTION_SELECTOR) || common.closest(USER_ROOT_SELECTOR)) return null;
+
+    const recognized = messageRoot(common);
+    if (recognized) return recognized;
+
+    // If the selection spans several blocks in a new ChatGPT layout, keep the
+    // smallest shared container below <main>. This deliberately avoids relying
+    // on generated class names while excluding the composer and navigation UI.
+    const main = common.closest("main");
+    if (!main || common === main) return null;
+    let root = common;
+    while (root.parentElement && root.parentElement !== main) {
+      if (["DIV", "SECTION", "ARTICLE"].includes(root.tagName)) break;
+      root = root.parentElement;
+    }
+    return root === main ? null : root;
   }
 
   function messageIdentity(message) {
@@ -229,9 +276,14 @@
     const range = selection.getRangeAt(0);
     const startMessage = messageRoot(range.startContainer);
     const endMessage = messageRoot(range.endContainer);
-    if (!startMessage || startMessage !== endMessage || !range.toString().trim()) return hideToolbar();
+    const selectedText = range.toString().trim();
+    if (!selectedText) return hideToolbar();
+    const root = startMessage && startMessage === endMessage
+      ? startMessage
+      : commonReadableRoot(range);
+    if (!root || !root.contains(range.startContainer) || !root.contains(range.endContainer)) return hideToolbar();
     state.currentRange = range.cloneRange();
-    state.currentMessage = startMessage;
+    state.currentMessage = root;
     showToolbar(range);
   }
 
@@ -406,6 +458,11 @@
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.key === "Escape") hideToolbar();
       else setTimeout(onSelection, 0);
+    }, true);
+    let selectionTimer = 0;
+    document.addEventListener("selectionchange", () => {
+      clearTimeout(selectionTimer);
+      selectionTimer = setTimeout(onSelection, 40);
     }, true);
     new MutationObserver(queueRender).observe(document.body, { childList: true, subtree: true });
     chrome.runtime.onMessage.addListener((message) => {

@@ -2,7 +2,7 @@
 
 A local-first Chrome/Edge extension for a two-pass reading workflow in ChatGPT: skim once and leave highlights, then return to the passages that mattered.
 
-Current version: **0.2.1**
+Current version: **0.2.2**
 
 ## Preview
 
@@ -36,6 +36,7 @@ Search annotations, jump back to the original passage, edit notes, or export the
 - Selection toolbar placement that avoids ChatGPT's native selection menu
 - Automatic Chinese/English interface switching based on the browser language
 - Compatibility with current ChatGPT message containers and selection events
+- Semantic text-block fallback when ChatGPT changes generated class names
 
 ## Language support
 
