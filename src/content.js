@@ -71,7 +71,22 @@
       ...document.querySelectorAll('main article, main [data-message-id], main [data-turn-id]'),
       ...document.querySelectorAll(`main ${READABLE_BLOCK_SELECTOR}`)
     ];
-    return Array.from(new Set(candidates.map(messageRoot).filter(Boolean)));
+    const roots = candidates.map(messageRoot).filter(Boolean);
+    // Multi-block fallback selections are anchored to a shared container,
+    // not an individual <p> or <li>. Rediscover those containers after reload
+    // as well as immediately after saving; an in-memory cache is insufficient.
+    for (const block of document.querySelectorAll(READABLE_BLOCK_SELECTOR)) {
+      if (!messageRoot(block)) continue;
+      const boundary = block.closest(`${ASSISTANT_ROOT_SELECTOR},${TURN_SELECTOR},article,[data-message-id],[data-turn-id]`);
+      const main = block.closest("main");
+      if (!main) continue;
+      for (let parent = block.parentElement; parent && parent !== main; parent = parent.parentElement) {
+        if (parent.closest(BLOCKED_SELECTION_SELECTOR) || isUserMessage(parent)) break;
+        roots.push(parent);
+        if (parent === boundary || parent.contains(boundary)) break;
+      }
+    }
+    return Array.from(new Set(roots));
   }
 
   function isUserMessage(element) {
@@ -109,7 +124,19 @@
   function commonReadableRoot(range) {
     const commonNode = range.commonAncestorContainer;
     const common = commonNode.nodeType === Node.ELEMENT_NODE ? commonNode : commonNode.parentElement;
-    if (!common || common.closest(BLOCKED_SELECTION_SELECTOR) || common.closest(USER_ROOT_SELECTOR)) return null;
+    if (!common || common.closest(BLOCKED_SELECTION_SELECTOR) || isUserMessage(common)) return null;
+
+    // A shared wrapper is only valid within one answer. Never broaden a
+    // selection across distinct turns or through the composer/navigation.
+    const boundarySelector = `${TURN_SELECTOR},article,[data-message-id],[data-turn-id]`;
+    const startElement = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? range.startContainer : range.startContainer.parentElement;
+    const endElement = range.endContainer.nodeType === Node.ELEMENT_NODE
+      ? range.endContainer : range.endContainer.parentElement;
+    if (startElement.closest(boundarySelector) !== endElement.closest(boundarySelector)) return null;
+    for (const blocked of common.querySelectorAll(`${BLOCKED_SELECTION_SELECTOR},${USER_ROOT_SELECTOR}`)) {
+      if (range.intersectsNode(blocked)) return null;
+    }
 
     const recognized = messageRoot(common);
     if (recognized) return recognized;
@@ -277,7 +304,7 @@
     const startMessage = messageRoot(range.startContainer);
     const endMessage = messageRoot(range.endContainer);
     const selectedText = range.toString().trim();
-    if (!selectedText) return hideToolbar();
+    if (!selectedText || !startMessage || !endMessage) return hideToolbar();
     const root = startMessage && startMessage === endMessage
       ? startMessage
       : commonReadableRoot(range);
@@ -331,8 +358,11 @@
 
   function findMessage(annotation) {
     const messages = assistantMessages();
-    return messages.find((message) => messageIdentity(message).id === annotation.messageId) ||
-      messages.find((message) => messageIdentity(message).fingerprint === annotation.messageFingerprint) ||
+    // Several nested roots may share a turn ID. Prefer only roots which can
+    // actually resolve the complete quote, rather than stopping at one item.
+    const containsQuote = (message) => Boolean(anchor.locateQuote(message.textContent || "", annotation));
+    return messages.find((message) => messageIdentity(message).id === annotation.messageId && containsQuote(message)) ||
+      messages.find((message) => messageIdentity(message).fingerprint === annotation.messageFingerprint && containsQuote(message)) ||
       messages.find((message) => (message.textContent || "").includes(annotation.quote));
   }
 

@@ -2,7 +2,16 @@
 
 A local-first Chrome/Edge extension for a two-pass reading workflow in ChatGPT: skim once and leave highlights, then return to the passages that mattered.
 
-Current version: **0.2.2**
+Current version: **0.2.3**
+
+## v0.2.3 — Multi-item highlights
+
+- Select across several list items (a–d), nested lists, or paragraphs and save them as one highlight with one note.
+- Fix shared fallback containers being lost during highlight rendering and restoration after reload.
+- Keep existing single-item annotations and the v1 storage/export format compatible.
+- Reject fallback selections across separate turns or through user messages and input areas.
+
+To update an unpacked installation, replace its files with this version, click **Reload** on the extension card in Chrome/Edge, and refresh the ChatGPT page. Do not uninstall the extension; keep its existing folder and browser profile to preserve stored annotations.
 
 ## Preview
 
@@ -70,9 +79,10 @@ It does not request cookies, browsing history, tabs, passwords, or access to oth
 
 ## Development
 
-No build step or dependencies are required.
+No build step or runtime dependencies are required. DOM regression tests use jsdom as a development dependency.
 
 ```bash
+npm ci
 npm test
 npm run check
 ```
